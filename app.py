@@ -254,7 +254,8 @@ def generate_episode_urls(seasons, base_url, lang, anime_id, title):
 def download():
     try:
         data = request.get_json() or {}
-        source_value = data.get("url", "").strip()
+        # Nettoyage agressif de l'URL pour supprimer les retours a la ligne accidentels
+        source_value = data.get("url", "").strip().replace("\n", "").replace("\r", "")
         download_type = data.get("type", "video")
         quality = data.get("quality", "best")
 
@@ -294,7 +295,7 @@ def download():
                 return jsonify({
                     "success": True,
                     "skipped": True,
-                    "message": "Episode saute : introuvable ou indisponible sur Franime.",
+                    "message": "Episode saute : lecteur non capture, bloque ou indisponible.",
                     "source_label": source_value
                 })
             return jsonify({"success": False, "error": result.get("error", "Fichier telecharge mais introuvable.")}), 500

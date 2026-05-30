@@ -290,7 +290,7 @@ def download_franime(url: str, output_path: str = "downloads",
         "success": False,
         "filename": None,
         "filepath": None,
-        "error": f"Aucun lecteur disponible ou fonctionnel pour cette URL. (Dernière erreur: {last_error})",
+        "error": "Lecteur non capturé ou indisponible sur Franime.",
         "reason": "not_found_or_blocked"
     }
 

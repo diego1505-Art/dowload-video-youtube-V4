@@ -1126,9 +1126,26 @@ https://example.com/video..."
             }
         }
 
+        function normalizeBatchText(value) {
+            const normalizedLines = [];
+            const lines = value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+
+            for (const line of lines) {
+                const isContinuation = !/^https?:\/\//i.test(line);
+                if (isContinuation && normalizedLines.length > 0) {
+                    normalizedLines[normalizedLines.length - 1] += line;
+                } else {
+                    normalizedLines.push(line);
+                }
+            }
+
+            return normalizedLines.join("\n");
+        }
+
         function parseBatchUrls(value) {
             const seen = new Set();
-            const matches = value.match(/https?:\/\/[^\s"'<>]+/g) || [];
+            const normalizedValue = normalizeBatchText(value);
+            const matches = normalizedValue.match(/https?:\/\/[^\s"'<>]+/g) || [];
             return matches
                 .map(url => url.trim().replace(/[),.;]+$/, ""))
                 .filter(url => {
@@ -1183,6 +1200,7 @@ https://example.com/video..."
 
             let successCount = 0;
             let failCount = 0;
+            let skippedCount = 0;
             updateStatus(`Telechargement en serie: 0/${urls.length}`, "loading");
 
             for (let index = 0; index < urls.length; index += 1) {
@@ -1196,7 +1214,8 @@ https://example.com/video..."
                     const data = await downloadOneUrl(url);
                     
                     if (data.skipped) {
-                        addBatchResult(`SAUTE: ${url} (Introuvable sur Franime)`, "fail");
+                        skippedCount += 1;
+                        addBatchResult(`SAUTE: ${url} (${data.message || "Lecteur non capture ou indisponible"})`, "fail");
                         continue;
                     }
 
@@ -1224,7 +1243,7 @@ https://example.com/video..."
             resetProgressUI();
 
             const finalState = failCount ? "error" : "success";
-            updateStatus(`Serie terminee: ${successCount} reussi, ${failCount} echoue`, finalState);
+            updateStatus(`Serie terminee: ${successCount} reussi, ${skippedCount} saute, ${failCount} echoue`, finalState);
         }
 
         // Progress bar
@@ -1652,7 +1671,7 @@ https://example.com/video..."
             batchResults.classList.remove("visible");
         });
         fetchEpisodesBtn.addEventListener("click", async () => {
-            const lines = batchUrls.value.trim().split("\n");
+            const lines = normalizeBatchText(batchUrls.value).trim().split("\n");
             const firstUrl = lines[0] ? lines[0].trim() : "";
 
             if (!firstUrl || !firstUrl.includes("franime.fr")) {
