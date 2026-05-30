@@ -26,7 +26,8 @@ Thumbs.db
 pip-wheel-metadata/
 
 # Generated downloads/media
-downloads/
+downloads/*
+!downloads/.gitkeep
 
 # Logs
 *.log
